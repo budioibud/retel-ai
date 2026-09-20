@@ -1,0 +1,38 @@
+# RitelAI replication environment — Python 3.11+
+# Pinned where behaviour drift would change reported numbers.
+
+# Core
+numpy==1.26.4
+pandas==2.2.2
+scipy==1.13.1
+pyarrow==16.1.0
+
+# Geospatial
+geopandas==0.14.4
+shapely==2.0.4
+pyproj==3.6.1
+pyogrio==0.9.0
+rasterio==1.3.10
+rtree==1.2.0
+
+# Modelling
+scikit-learn==1.5.0
+xgboost==2.0.3
+geoxgboost==0.1.4
+optuna==3.6.1
+
+# Explainability
+shap==0.45.1
+
+# Sentiment
+torch==2.3.1
+transformers==4.41.2
+datasets==2.19.2
+accelerate==0.30.1
+sentencepiece==0.2.0
+
+# Utilities
+joblib==1.4.2
+matplotlib==3.9.0
+tqdm==4.66.4
+openpyxl==3.1.4

@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Model artefacts and caches — regenerate, do not commit
+*.joblib
+*.pt
+*.safetensors
+cache/
+checkpoints/
+finetuned_models/
+optuna_work/
+gxgb_work/
+
+# Large intermediates
+*.npz
+*.tif
+*.tiff
+full_grid_*.gpkg
+
+# Raw inputs that must not be redistributed
+raw_reviews/
+outlet_master/
+osm_extract/
+*.osm.pbf
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
