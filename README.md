@@ -2,7 +2,7 @@
 
 Processed spatial dataset for machine learning-based suitability assessment of retail expansion locations (Alfamart and Indomaret) in the Jakarta-Bogor-Depok-Tangerang metropolitan area.
 
-**📖 Methods & results:** See the published paper in *IAENG Transactions on Engineering Sciences*.
+**📖 Methods & results:** See the published paper in *IAENG IJCS*.
 
 ---
 
@@ -207,8 +207,6 @@ About 0.1–0.2% of raw scores fell outside [0, 1] and were clipped. The output 
 
 | Path | Format | Size | Checksum |
 |---|---|---|---|
-| `grid/grid_alfamart_x1_x35.parquet` | Parquet, snappy | ~80–120 MB | See `checksums.sha256` |
-| `grid/grid_indomaret_x1_x35.parquet` | Parquet, snappy | ~80–120 MB | idem |
 | `grid/grid_geometry_100m.gpkg` | GeoPackage | ~250–350 MB | idem |
 | `sentiment/outlet_features_alfamart_x27_x35.csv` | UTF-8 CSV | ~1–2 MB | idem |
 | `sentiment/outlet_features_indomaret_x27_x35.csv` | UTF-8 CSV | ~1–2 MB | idem |
@@ -234,11 +232,11 @@ Candidate layers are additionally reprojected to EPSG:4326 for web display.
 **Cite as:**
 
 ```bibtex
-@dataset{ritelai2024,
+@dataset{ritelai2026,
   author = {Budi Carto},
   title = {RitelAI: Retail Location Suitability Assessment for Jabodetabek},
-  year = {2024},
-  url = {https://github.com/budi-carto/ritelai-jabodetabek},
+  year = {2026},
+  url = {https://github.com/budioibud/ritelai},
   doi = {10.5281/zenodo.XXXXX}
 }
 ```
@@ -259,7 +257,7 @@ Candidate layers are additionally reprojected to EPSG:4326 for web display.
 For questions about the dataset or to report issues:
 
 - **GitHub Issues**: https://github.com/budi-carto/ritelai-jabodetabek/issues
-- **Email**: budi.carto@example.com
+- **Email**: budioibud@gmail.com
 
 ---
 
@@ -275,5 +273,5 @@ The data is provided **as-is**, without warranty of any kind.
 ---
 
 **Last updated:** 2024-09-20  
-**Repository:** https://github.com/budi-carto/ritelai-jabodetabek  
+**Repository:** https://github.com/budioibud/ritelai
 **Archive DOI:** https://doi.org/10.5281/zenodo.XXXXX
