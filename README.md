@@ -221,14 +221,6 @@ About 0.1–0.2% of raw scores fell outside [0, 1] and were clipped. The output 
 
 Candidate layers are additionally reprojected to EPSG:4326 for web display.
 
----
-
-## 🔐 License & Attribution
-
-- **Aggregated data** (all files under `data/`): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- **Third-party sources**: Not redistributed. Processed derivatives only. See LICENSE-DATA.md for details.
-- **Personal data**: None released. Outlet-level aggregation only; no individual reviewer records.
-
 **Cite as:**
 
 ```bibtex
@@ -236,7 +228,7 @@ Candidate layers are additionally reprojected to EPSG:4326 for web display.
   author = {Budi Carto},
   title = {RitelAI: Retail Location Suitability Assessment for Jabodetabek},
   year = {2026},
-  url = {https://github.com/budioibud/ritelai},
+  url = {https://github.com/budioibud/ritel-ai},
   doi = {10.5281/zenodo.XXXXX}
 }
 ```
@@ -256,7 +248,6 @@ Candidate layers are additionally reprojected to EPSG:4326 for web display.
 
 For questions about the dataset or to report issues:
 
-- **GitHub Issues**: https://github.com/budi-carto/ritelai-jabodetabek/issues
 - **Email**: budioibud@gmail.com
 
 ---
@@ -273,5 +264,5 @@ The data is provided **as-is**, without warranty of any kind.
 ---
 
 **Last updated:** 2024-09-20  
-**Repository:** https://github.com/budioibud/ritelai
+**Repository:** https://github.com/budioibud/ritel-ai
 **Archive DOI:** https://doi.org/10.5281/zenodo.XXXXX
