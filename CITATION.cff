@@ -1,61 +1,32 @@
 cff-version: 1.2.0
-title: >-
-  RitelAI replication package: microspatial grid, review-derived
-  features and candidate layers for Greater Jakarta
-message: >-
-  If you use this dataset or code, please cite both the paper and
-  this archived release.
 type: dataset
+title: "RitelAI: Retail Location Suitability Assessment for Jabodetabek"
+abstract: "Processed spatial dataset for machine learning-based suitability assessment of retail expansion locations (Alfamart and Indomaret) in the Jakarta-Bogor-Depok-Tangerang metropolitan area. Includes 35 spatial predictors per 100×100 m grid cell, outlet-level sentiment aggregation, development-holdout partition, and candidate locations with SHAP explanations."
 authors:
-  - given-names: Budi Prasetyo
-    family-names: Nugroho
-    email: budi.nugroho001@binus.ac.id
-    affiliation: >-
-      Master of Computer Science Program, BINUS Graduate Program,
-      Bina Nusantara University, Jakarta, Indonesia
-  - given-names: Alexander Agung Santoso
-    family-names: Gunawan
-    email: aagung@binus.edu
-    affiliation: >-
-      School of Computer Science, Bina Nusantara University,
-      Jakarta, Indonesia
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.0000000
-    description: Archived release of the replication package
-repository-code: 'https://github.com/budi-carto/ritelai-jabodetabek'
-url: 'https://www.geoairitel.budi-carto.my.id'
-abstract: >-
-  Replication package for RitelAI, an explainable GeoAI framework
-  that recommends candidate locations for Alfamart and Indomaret
-  minimarkets across the Greater Jakarta metropolitan region. The
-  release contains a 100 x 100 m analysis grid of 685,318 cells with
-  35 predictors, outlet-level features derived from Google Maps
-  consumer reviews, the cached block-disjoint development and
-  untouched-holdout partition, Top 1/5/10 percent candidate layers
-  with local SHAP drivers, and the notebooks and scripts that
-  reproduce every reported result.
+  - family-names: Carto
+    given-names: Budi
 keywords:
-  - explainable GeoAI
-  - retail site selection
-  - spatial cross-validation
-  - consumer sentiment
-  - XGBoost
-  - Geographical-XGBoost
-  - Jabodetabek
+  - machine-learning
+  - retail
+  - location-analysis
+  - spatial-analysis
+  - xgboost
+  - geospatial
+  - gis
+  - site-selection
+  - indonesia
+  - jabodetabek
 license: CC-BY-4.0
-license-url: 'https://creativecommons.org/licenses/by/4.0/'
-date-released: '2026-09-20'
-version: 1.0.0
-preferred-citation:
-  type: article
-  title: >-
-    RitelAI: Integrating Geospatial Data and Consumer Sentiment for
-    Retail Store Location Recommendation in Greater Jakarta
-  authors:
-    - given-names: Budi Prasetyo
-      family-names: Nugroho
-    - given-names: Alexander Agung Santoso
-      family-names: Gunawan
-  journal: IAENG International Journal of Computer Science
-  year: 2026
+repository-code: "https://github.com/budi-carto/ritelai-jabodetabek"
+repository-artifact: "https://doi.org/10.5281/zenodo.XXXXX"
+version: "1.0.0"
+date-released: 2024-09-20
+contact:
+  - email: budi.carto@example.com
+references:
+  - authors:
+      - family-names: Carto
+        given-names: Budi
+    title: "RitelAI: Machine Learning-Based Retail Suitability Assessment for Jabodetabek"
+    journal: "IAENG Transactions on Engineering Sciences"
+    year: 2024

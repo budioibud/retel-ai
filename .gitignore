@@ -1,35 +1,31 @@
+# Data files (large, stored separately or with Git LFS)
+data/**/*.parquet
+data/**/*.gpkg
+data/**/*.csv
+
 # Python
 __pycache__/
 *.py[cod]
-.venv/
+*$py.class
+*.so
+.Python
+env/
 venv/
-.ipynb_checkpoints/
-.pytest_cache/
+ENV/
+.venv
 
-# Model artefacts and caches — regenerate, do not commit
-*.joblib
-*.pt
-*.safetensors
-cache/
-checkpoints/
-finetuned_models/
-optuna_work/
-gxgb_work/
-
-# Large intermediates
-*.npz
-*.tif
-*.tiff
-full_grid_*.gpkg
-
-# Raw inputs that must not be redistributed
-raw_reviews/
-outlet_master/
-osm_extract/
-*.osm.pbf
-
-# OS and editor
-.DS_Store
-Thumbs.db
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+*.tmp
+*.log
+.ipynb_checkpoints/

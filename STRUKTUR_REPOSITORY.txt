@@ -1,0 +1,122 @@
+STRUKTUR REPOSITORY DATA-ONLY RITELAI
+=====================================
+
+ritelai-jabodetabek/
+│
+├── README.md                    ← Deskripsi project & quick start
+├── DATA_DICTIONARY.md           ← Definisi lengkap X1-X35
+├── REPRODUCE.md                 ← Panduan menggunakan data + reproduksi hasil
+├── CITATION.cff                 ← Format sitasi machine-readable
+├── LICENSE                      ← MIT (untuk derivative code jika ada)
+├── LICENSE-DATA.md              ← CC BY 4.0 (untuk data)
+├── .gitignore                   ← File & folder yang diabaikan git
+│
+└── data/
+    ├── README.md                ← File manifest & checksums
+    ├── checksums.sha256         ← SHA-256 untuk verifikasi
+    │
+    ├── grid/
+    │   ├── grid_alfamart_x1_x35.parquet         (~80-120 MB)
+    │   ├── grid_indomaret_x1_x35.parquet        (~80-120 MB)
+    │   └── grid_geometry_100m.gpkg              (~250-350 MB)
+    │
+    ├── sentiment/
+    │   ├── outlet_features_alfamart_x27_x35.csv (~1-2 MB)
+    │   └── outlet_features_indomaret_x27_x35.csv(~1-2 MB)
+    │
+    ├── partition/
+    │   ├── spatial_blocks_1km.csv               (~15-20 MB)
+    │   └── development_holdout_split.csv        (<1 MB)
+    │
+    └── candidates/
+        ├── candidates_alfamart_xgboost_top1_top5_top10.gpkg        (~30-60 MB)
+        ├── candidates_alfamart_geoxgboost_top1_top5_top10.gpkg     (~30-60 MB)
+        ├── candidates_indomaret_xgboost_top1_top5_top10.gpkg       (~30-60 MB)
+        └── candidates_indomaret_geoxgboost_top1_top5_top10.gpkg    (~30-60 MB)
+
+
+TOTAL UKURAN: ~600-900 MB
+
+PERBEDAAN DENGAN FULL REPO:
+===========================
+❌ TIDAK INCLUDED (hanya data saja):
+   - notebooks/ (semua Jupyter notebooks)
+   - scripts/ (semua Python scripts)
+   - results/ (output dari analisis)
+   - Conda environment files
+   - requirements.txt untuk Python packages
+
+✅ INCLUDED (dokumentasi & data):
+   - Semua file data (grid, sentiment, partition, candidates)
+   - README dengan quick start (hanya load data, tidak analisis)
+   - DATA_DICTIONARY.md (definisi X1-X35)
+   - REPRODUCE.md (panduan menggunakan data, referensi ke pseudo-code di paper)
+   - License files (MIT untuk code future, CC BY 4.0 untuk data)
+   - CITATION.cff (format sitasi)
+   - .gitignore (untuk git management)
+
+PENGGUNAAN REPOSITORY INI:
+==========================
+
+1. CLONE
+   git clone https://github.com/username/ritelai-jabodetabek.git
+   cd ritelai-jabodetabek
+
+2. VERIFIKASI INTEGRITAS
+   cd data/
+   sha256sum -c checksums.sha256
+   # Semua file harus menunjukkan "OK"
+
+3. LOAD DATA DI PYTHON
+   import pandas as pd
+   import geopandas as gpd
+
+   # Load grid dengan predictors
+   alfamart = pd.read_parquet("data/grid/grid_alfamart_x1_x35.parquet")
+
+   # Load geometries
+   geom = gpd.read_file("data/grid/grid_geometry_100m.gpkg", layer="grid_100m")
+
+   # Join
+   grid = geom.merge(alfamart, on="GRID_ID", how="inner")
+
+4. BACA DOKUMENTASI
+   - README.md: Overview & quick start
+   - DATA_DICTIONARY.md: Detail X1-X35
+   - REPRODUCE.md: Cara menggunakan data & interpretasi
+
+UNTUK REPRODUKSI ANALISIS:
+==========================
+- Refer ke pseudo-code di paper jurnal IAENG
+- atau contact author untuk akses full repository dengan code
+
+LISENSI:
+========
+- Data (data/): CC BY 4.0 (open, dapat digunakan commercial)
+- Code derivative (jika ada): MIT
+- Attribution required untuk data
+
+UKURAN BERDASARKAN TIER:
+=======================
+- Dokumentasi saja (~2 MB):
+  * Cukup dengan .md files + .gitignore + .cff
+
+- Data essential (~350 MB):
+  * Grid alfamart + geometry + Alfamart sentiment
+  * Partition files
+
+- Data lengkap (~900 MB):
+  * Semua file: 2 brands × 2 algorithms candidates
+  * Semua sentiment features
+  * Semua partition & geometries
+
+CATATAN PENTING:
+================
+⚠️  Pseudo-code untuk analisis sudah ada di paper jurnal IAENG
+    Repository ini hanya untuk akses data, bukan untuk code implementation
+
+⚠️  Alfamart outlet count = 3,632 (dari cached partition)
+    Jangan rebuild dari outlet master terbaru (akan jadi 3,637)
+
+⚠️  File besar (parquet, gpkg) mungkin perlu Git LFS atau Zenodo
+    jika size repository > GitHub 100 MB limit per file

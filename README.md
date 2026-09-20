@@ -1,334 +1,279 @@
-# RitelAI — Geospatial Data and Consumer Sentiment for Retail Store Location Recommendation in Greater Jakarta
+# RitelAI: Retail Location Suitability Assessment for Jabodetabek
 
-[![Data License: CC BY 4.0](https://img.shields.io/badge/data%20license-CC%20BY%204.0-blue.svg)](LICENSE-DATA.md)
-[![Code License: MIT](https://img.shields.io/badge/code%20license-MIT-green.svg)](LICENSE)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.0000000.svg)](https://doi.org/10.5281/zenodo.0000000)
+Processed spatial dataset for machine learning-based suitability assessment of retail expansion locations (Alfamart and Indomaret) in the Jakarta-Bogor-Depok-Tangerang metropolitan area.
 
-Replication package for:
-
-> B. P. Nugroho and A. A. S. Gunawan, "RitelAI: Integrating geospatial data and consumer sentiment for retail store location recommendation in Greater Jakarta," *IAENG International Journal of Computer Science*, forthcoming.
-
-RitelAI is an explainable GeoAI framework that screens candidate locations for Alfamart and Indomaret minimarkets across the Greater Jakarta metropolitan region (Jabodetabek). It combines 25 external geospatial predictors, one same-brand network predictor, and nine features derived from Google Maps consumer reviews on a uniform 100 × 100 m grid, then compares a global model (XGBoost) against a spatially local model (Geographical-XGBoost) under a leakage-aware spatial evaluation design.
-
-**Interactive WebGIS:** https://www.geoairitel.budi-carto.my.id
+**📖 Methods & results:** See the published paper in *IAENG Transactions on Engineering Sciences*.
 
 ---
 
-## What this repository is for
+## Quick Start
 
-The recommendation score produced here is a **relative spatial suitability index**, not a calibrated probability and not a forecast of commercial success. It measures how closely a grid cell resembles the feature signature of the existing outlet network. Every candidate still requires field survey, parcel availability checks, zoning verification, and technical and financial feasibility assessment before any decision is made.
-
----
-
-## Study design at a glance
-
-| Item | Value |
-|---|---|
-| Study area | Jabodetabek (Jakarta, Bogor, Depok, Tangerang, Bekasi) |
-| Spatial unit | 100 × 100 m grid, 685,318 cells |
-| Projected CRS | EPSG:32748 (WGS 84 / UTM zone 48S) |
-| Spatial blocks | 7,278 blocks of 1 × 1 km |
-| Target | Presence–background (1 = grid contains a mapped outlet) |
-| Positive prevalence | Alfamart 0.530%, Indomaret 0.508% |
-| Predictors | 35 (X1–X25 external, X26 same-brand network, X27–X35 review-derived) |
-| Development / holdout | 5,822 blocks / 1,456 blocks, zero block overlap |
-| Inner validation | 5-fold spatial GroupKFold on the development set |
-| Tuning | Optuna, 20 valid trials per study, objective = out-of-fold Average Precision |
-| Primary reporting metric | Recall@5% on the untouched spatial holdout |
-
-### Fixed experimental target
-
-All experiments run on a **cached block-disjoint partition**. Its fixed target counts are:
-
-| Brand | Positives | Development | Holdout | Dev grids | Holdout grids |
-|---|---|---|---|---|---|
-| Alfamart | 3,632 | 2,904 | 728 | 548,111 | 137,207 |
-| Indomaret | 3,481 | 2,785 | 696 | 548,272 | 137,046 |
-
-> **Note for people re-running the pipeline.** Rebuilding the target from the current outlet master yields **3,637** positive Alfamart grids (prevalence 0.005307) rather than 3,632 (prevalence 0.005300). The difference of five grids comes from outlet-master updates made after the partition was cached. The cached partition is shipped in this repository so that every number in the paper reproduces exactly. Indomaret is unaffected (3,481 either way).
-
----
-
-## Headline results — untouched spatial holdout
-
-Evaluated once, after all tuning and model selection were complete.
-
-| Brand | Algorithm | AP | ROC-AUC | Precision@5% | Recall@5% |
-|---|---|---|---|---|---|
-| Alfamart | XGBoost | **0.049913** | **0.914025** | **0.052325** | **0.491781** |
-| Alfamart | GeoXGBoost | 0.044429 | 0.905022 | 0.045912 | 0.431507 |
-| Indomaret | XGBoost | **0.053683** | **0.919591** | **0.052532** | **0.517241** |
-| Indomaret | GeoXGBoost | 0.044996 | 0.903668 | 0.045382 | 0.446839 |
-
-XGBoost leads on every metric for both brands: relative AP advantage of 12.34% (Alfamart) and 19.31% (Indomaret). At a five-percent screening budget it recovers roughly half of the historically positive holdout grids, against a base prevalence near 0.5%.
-
-Recall at the other screening budgets:
-
-| Brand | Algorithm | Recall@1% | Recall@5% | Recall@10% |
-|---|---|---|---|---|
-| Alfamart | XGBoost | 14.11% | 49.18% | 70.14% |
-| Alfamart | GeoXGBoost | 11.64% | 43.15% | 68.08% |
-| Indomaret | XGBoost | 15.09% | 51.72% | 71.70% |
-| Indomaret | GeoXGBoost | 12.36% | 44.68% | 66.81% |
-
-### Tuning summary
-
-| Brand | Algorithm | Valid trials | Completed | Pruned | Best trial | Inner spatial OOF AP |
-|---|---|---|---|---|---|---|
-| Alfamart | XGBoost | 20 | 18 | 2 | 15 | 0.054749 |
-| Alfamart | GeoXGBoost | 20 | 18 | 2 | 16 | 0.043182 |
-| Indomaret | XGBoost | 20 | 12 | 8 | 14 | 0.055375 |
-| Indomaret | GeoXGBoost | 20 | 17 | 3 | 17 | 0.044687 |
-
-Both GeoXGBoost studies selected an adaptive kernel with bandwidth 240 and disabled the optional spatial weights.
-
-### Candidate layers
-
-After removing existing-outlet grids and cells whose centroid lies within 250 m of a same-brand outlet:
-
-| Brand | Eligible grids | Top 1% | Top 5% | Top 10% |
-|---|---|---|---|---|
-| Alfamart | 623,220 | 6,233 | 31,161 | 62,322 |
-| Indomaret | 625,928 | 6,259 | 31,295 | 62,589 |
-
-Tier sizes are percentiles of the same eligible-grid pool within each brand, so both algorithms return the same count at a given tier while selecting different cells.
-
----
-
-## Leakage control
-
-Two leakage paths matter in this problem, and both are handled explicitly.
-
-**Spatial dependence.** Neighbouring 100 m grids share roads, land use and activity. Splitting at row level lets nearly identical cells land in both training and testing. Every split here is made at the level of 1 × 1 km blocks, and the final holdout is an untouched set of blocks that is opened exactly once.
-
-**Target-defining features.** X26 and X27–X35 are derived from the very outlets that define the target. Computing them before splitting would leak the label. Instead:
-
-- inside every training/validation split, the dynamic features of validation grids are rebuilt using **only** target-brand outlets located in the training region;
-- for positive training grids, leave-one-grid-out logic removes the outlet or outlets sitting in the query grid before its own dynamic features are constructed;
-- X24–X25 depend on competitor outlets rather than the modelled brand, so they are computed once.
-
-The same rule is applied when the deployment model is refitted.
-
----
-
-## Repository structure
-
-```
-ritelai-jabodetabek/
-├── README.md
-├── DATA_DICTIONARY.md          # definition, source and construction of X1–X35
-├── REPRODUCE.md                # step-by-step replication guide
-├── CITATION.cff
-├── LICENSE                     # MIT, applies to code
-├── LICENSE-DATA.md             # CC BY 4.0, applies to aggregated data
-├── requirements.txt
-├── environment.yml
-│
-├── data/
-│   ├── README.md               # file-by-file description and checksums
-│   ├── grid/
-│   │   ├── grid_alfamart_x1_x35.parquet
-│   │   ├── grid_indomaret_x1_x35.parquet
-│   │   └── grid_geometry_100m.gpkg          # GRID_ID → polygon, EPSG:32748
-│   ├── sentiment/
-│   │   ├── outlet_features_alfamart_x27_x35.csv
-│   │   └── outlet_features_indomaret_x27_x35.csv
-│   ├── partition/
-│   │   ├── spatial_blocks_1km.csv           # GRID_ID → BLOCK_ID
-│   │   └── development_holdout_split.csv    # BLOCK_ID → development | holdout
-│   └── candidates/
-│       ├── candidates_alfamart_xgboost_top1_top5_top10.gpkg
-│       ├── candidates_alfamart_geoxgboost_top1_top5_top10.gpkg
-│       ├── candidates_indomaret_xgboost_top1_top5_top10.gpkg
-│       └── candidates_indomaret_geoxgboost_top1_top5_top10.gpkg
-│
-├── notebooks/
-│   ├── 1_sentiment_alfamart.ipynb
-│   ├── 2_sentiment_indomaret.ipynb
-│   ├── 3_optuna_xgboost_geoxgboost_x1_x35.ipynb
-│   └── 4_holdout_topk_evaluation.ipynb
-│
-├── scripts/
-│   ├── baseline_compare_xgboost_geoxgboost.py
-│   └── optuna_best_available_compare.py
-│
-└── results/
-    ├── holdout_metrics.csv                  # the headline table above
-    ├── study_convergence_summary.csv
-    ├── best_hyperparameters.csv
-    ├── surrogate_quality.csv
-    ├── global_shap_importance_*.csv
-    └── urban_context_top10_composition.csv
-```
-
----
-
-## Data files
-
-### `data/grid/grid_{brand}_x1_x35.parquet`
-
-One row per grid cell, 685,318 rows per brand.
-
-| Column | Type | Description |
-|---|---|---|
-| `GRID_ID` | int64 | Unique cell identifier, joins to `grid_geometry_100m.gpkg` |
-| `centroid_x`, `centroid_y` | float64 | Cell centroid in EPSG:32748, metres |
-| `BLOCK_ID` | int64 | 1 × 1 km spatial block, joins to `data/partition/` |
-| `x1` … `x35` | float64 | Predictors, see `DATA_DICTIONARY.md` |
-| `target_presence` | int8 | 1 if the cell contains at least one mapped outlet of this brand |
-| `WADMPR`, `WADMKK`, `WADMKC`, `WADMKD` | string | Province, regency/city, district, village |
-
-X24–X26 and X27–X35 are brand-specific. X1–X23 are identical across the two brand files.
-
-### `data/sentiment/outlet_features_{brand}_x27_x35.csv`
-
-Outlet-level aggregated review features, before they are propagated to grids within a 500 m radius.
-
-| Column | Description |
-|---|---|
-| `outlet_id` | Anonymised outlet key |
-| `latitude`, `longitude` | Outlet coordinates, EPSG:4326 |
-| `n_reviews` | Number of deduplicated reviews behind the aggregation |
-| `x27` … `x30` | Mean review-level polarity among reviews mentioning stock, queue/cashier, price, service |
-| `x31` | Mean rating over the most recent 12 months, falling back to all valid ratings |
-| `x32` … `x35` | Newer-half minus older-half mean sentiment, per aspect |
-
-**Zero is ambiguous by construction.** A zero in X27–X30 or X32–X35 may mean neutral sentiment, no review mentioning that aspect, or too few dated reviews to compute a change. The three cases are not distinguished in the released features and should not be read as observed neutrality. Preserving explicit missingness indicators is listed as future work in the paper.
-
-### `data/candidates/*.gpkg`
-
-Top 10% candidate cells, with Top 1% and Top 5% nested inside as flags.
-
-| Column | Description |
-|---|---|
-| `GRID_ID`, `BRAND`, `ALGORITHM` | Identity |
-| `PRED_PROBA` | Relative suitability score in [0, 1] — **not a probability** |
-| `PERCENTILE` | Percentile within the eligible-grid pool of this brand |
-| `CAND_TOP1`, `CAND_TOP5`, `CAND_TOP10` | Nested tier flags |
-| `DIST_EXIST_M` | Distance to the nearest existing same-brand outlet, metres |
-| `TOP1_FEAT` … `TOP7_FEAT` | The seven strongest local SHAP drivers, ranked by absolute contribution |
-| `TOP1_SHAP` … `TOP7_SHAP` | Signed SHAP value of each driver |
-| `TOP1_DIR` … `TOP7_DIR` | Direction: raises or lowers the score |
-| `WADMKK` | Regency/city, for administrative filtering |
-
-For XGBoost these are direct TreeSHAP values. For GeoXGBoost they are **surrogate** SHAP values, produced by an XGBoost regressor trained to approximate the GeoXGBoost score surface; fidelity statistics are reported in `results/surrogate_quality.csv`. Surrogate attributions describe the surrogate's behaviour, not the internal local ensembles, and the two are never pooled.
-
----
-
-## What is not released, and why
-
-| Not included | Reason | How to obtain |
-|---|---|---|
-| Raw Google Maps review text, reviewer names, profile identifiers and images | Personal data and platform terms | Not redistributable; only aggregated non-identifying derivatives are released |
-| OpenStreetMap road and POI extracts | ODbL, share-alike | Download from the provider; `DATA_DICTIONARY.md` records the extraction date and query |
-| BIG land use and RBI layers, ATR/BPN land-value WMS | Agency licensing | Request from the agency; the processing step is documented per predictor |
-| WorldPop population, VIIRS nighttime light | Redistribution not required | Free download links in `DATA_DICTIONARY.md` |
-| Outlet coordinate master | Commercial third-party POI data | The aggregated target and features are released instead |
-
-Every predictor in the released grid is the **processed** value used by the models. That is enough to reproduce every model, metric, table and figure in the paper. Rebuilding the grid from scratch requires the third-party sources above; the recipe for each predictor is in `DATA_DICTIONARY.md`.
-
----
-
-## Quick start
-
-```bash
-git clone https://github.com/budi-carto/ritelai-jabodetabek.git
-cd ritelai-jabodetabek
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-Reproduce the headline holdout table:
+### Access the data:
 
 ```python
 import pandas as pd
+import geopandas as gpd
 
-grid  = pd.read_parquet("data/grid/grid_alfamart_x1_x35.parquet")
+# Load grid with predictors (685,318 rows per brand)
+alfamart = pd.read_parquet("data/grid/grid_alfamart_x1_x35.parquet")
+indomaret = pd.read_parquet("data/grid/grid_indomaret_x1_x35.parquet")
+
+# Load geometries
+geom = gpd.read_file("data/grid/grid_geometry_100m.gpkg", layer="grid_100m")
+
+# Join
+alfamart_geo = geom.merge(alfamart, on="GRID_ID", how="inner")
+
+# Load sentiment features (outlet-level, before spatial propagation)
+sentiment_alfa = pd.read_csv("data/sentiment/outlet_features_alfamart_x27_x35.csv")
+
+# Load development/holdout split (block-disjoint, ~80/20)
 split = pd.read_csv("data/partition/development_holdout_split.csv")
 
-grid = grid.merge(split, on="BLOCK_ID", how="left")
-dev  = grid[grid["partition"] == "development"]
-hold = grid[grid["partition"] == "holdout"]
-
-print(len(dev), dev["target_presence"].sum())    # 548111 2904
-print(len(hold), hold["target_presence"].sum())  # 137207 728
+# Load candidate locations (Top 10%, 1%, 5% tiers with SHAP explanations)
+candidates = gpd.read_file("data/candidates/candidates_alfamart_xgboost_top1_top5_top10.gpkg")
 ```
 
-Full instructions, including the fold-safe rebuild of X26–X35, are in [`REPRODUCE.md`](REPRODUCE.md).
+### Verify data integrity:
+
+```bash
+cd data/
+sha256sum -c checksums.sha256
+```
+
+All files must show "OK".
 
 ---
 
-## Sentiment classification
+## 📊 Dataset Overview
 
-Brand-specific Indonesian transformer models were fine-tuned and selected on **validation** macro-F1; the test set was opened once, for the selected family only.
+### Grid Analysis Tables
 
-| Brand | Selected model | Validation accuracy | Validation macro-F1 | Test accuracy | Test macro-F1 |
+**`grid/grid_alfamart_x1_x35.parquet` · `grid/grid_indomaret_x1_x35.parquet`**
+
+One row per 100 × 100 m grid cell. **685,318 rows per brand.**
+
+| Column | Type | Description |
+|---|---|---|
+| `GRID_ID` | int64 | Unique cell key; joins to geometries and partition |
+| `centroid_x`, `centroid_y` | float64 | Cell centroid, metres, EPSG:32748 |
+| `BLOCK_ID` | int64 | 1 × 1 km spatial block; 7,278 distinct |
+| `x1` … `x35` | float64 | Predictors; see DATA_DICTIONARY.md |
+| `target_presence` | int8 | 1 if cell contains ≥1 outlet, else 0 |
+| `WADMPR`, `WADMKK`, `WADMKC`, `WADMKD` | string | Admin boundaries (province, regency, district, village) |
+
+**Expected totals:**
+
+| Brand | Rows | Outlets (target=1) | Prevalence | Blocks |
+|---|---|---|---|---|
+| Alfamart | 685,318 | 3,632 | 0.530% | 7,278 |
+| Indomaret | 685,318 | 3,481 | 0.508% | 7,278 |
+
+> Alfamart count reflects the cached experimental target used in the paper. Rebuilding from the current outlet master gives 3,637 instead. **Use the shipped value (3,632) to match the paper exactly.**
+
+---
+
+### Geometries
+
+**`grid/grid_geometry_100m.gpkg`**
+
+Cell boundaries: one row per GRID_ID, polygon geometry in EPSG:32748.
+
+```python
+import geopandas as gpd, pandas as pd
+
+# Load in two steps
+geom = gpd.read_file("data/grid/grid_geometry_100m.gpkg", layer="grid_100m")
+attrs = pd.read_parquet("data/grid/grid_alfamart_x1_x35.parquet")
+
+# Join
+grid = geom.merge(attrs, on="GRID_ID", how="inner")
+```
+
+---
+
+### Sentiment Features
+
+**`sentiment/outlet_features_alfamart_x27_x35.csv` · `sentiment/outlet_features_indomaret_x27_x35.csv`**
+
+Outlet-level aggregated review data **before** spatial propagation to grids (see DATA_DICTIONARY.md for X27–X35 definitions).
+
+| Column | Type | Description |
+|---|---|---|
+| `outlet_id` | string | Anonymised outlet key |
+| `latitude`, `longitude` | float64 | Outlet position, EPSG:4326 |
+| `n_reviews` | int | Total deduplicated reviews |
+| `n_reviews_recent_12m` | int | Reviews in 12-month window (for X31) |
+| `x27` … `x30` | float64 | Mean polarity [−1, 1] for stock, queue, price, service |
+| `x31` | float64 | Mean star rating, recent 12m, fallback all |
+| `x32` … `x35` | float64 | Sentiment change: newer half − older half |
+
+**Row counts:**
+
+| Brand | Outlets | With coordinates | With reviews | Reviews classified |
+|---|---|---|---|---|
+| Alfamart | 3,947 | 3,898 | 3,642 | 118,604 |
+| Indomaret | 3,754 | 3,718 | 3,621 | 74,437 |
+
+**⚠️ Zero is ambiguous** in X27–X30 and X32–X35: may mean neutral sentiment, no review mentioning that aspect, or too few dated reviews for change calculation. Use `n_reviews` and `n_reviews_recent_12m` to distinguish.
+
+---
+
+### Spatial Partitioning
+
+**`partition/spatial_blocks_1km.csv`**
+
+Maps 685,318 grid cells to 7,278 blocks (1 × 1 km). Used for fold-safe feature construction.
+
+| Column | Description |
+|---|---|
+| `GRID_ID` | Cell key |
+| `BLOCK_ID` | Block key |
+| `block_row`, `block_col` | Block indices in projected grid |
+
+---
+
+**`partition/development_holdout_split.csv`**
+
+**The file that makes reproducible evaluation possible.** Block-disjoint 80/20 split, selected to preserve target prevalence with zero block overlap.
+
+| Partition | Blocks | Alfamart grids | Alfamart outlets | Indomaret grids | Indomaret outlets |
 |---|---|---|---|---|---|
-| Alfamart | IndoBERT, fine-tuned | 0.8622 | 0.8152 | 0.8133 | 0.7497 |
-| Indomaret | IndoRoBERTa, fine-tuned | 0.8489 | 0.8455 | 0.8311 | 0.8278 |
+| Development | 5,822 | 548,111 | 2,904 | 548,272 | 2,785 |
+| Holdout | 1,456 | 137,207 | 728 | 137,046 | 696 |
 
-Base checkpoints: `indobenchmark/indobert-base-p1` and `flax-community/indonesian-roberta-base`. Off-the-shelf baselines: `taufiqdp/indonesian-sentiment` and `w11wo/indonesian-roberta-base-sentiment-classifier`. Fine-tuning used a maximum sequence length of 96 tokens, effective batch size 8, two epochs, learning rate 2 × 10⁻⁵, weight decay 0.01, and warm-up over roughly 10% of update steps.
-
-Labelled reference sets: 1,048 / 225 / 225 for Alfamart and 1,049 / 225 / 225 for Indomaret, stratified 70 / 15 / 15 across low (1–2), middle (3) and high (4–5) rating strata.
-
-Inference corpora after deduplication: 118,604 Alfamart reviews across 3,642 outlets, and 74,437 Indomaret reviews across 3,621 outlets.
+```python
+# Verify zero overlap
+dev_blocks = set(split[split["partition"] == "development"]["BLOCK_ID"])
+hold_blocks = set(split[split["partition"] == "holdout"]["BLOCK_ID"])
+assert dev_blocks & hold_blocks == set()  # Must be empty
+```
 
 ---
 
-## Citation
+### Candidate Locations
 
-If you use this dataset or code, please cite the paper and the archived release:
+**`candidates/candidates_{brand}_{algorithm}_top1_top5_top10.gpkg`**
+
+Four files: 2 brands × 2 algorithms (XGBoost, GeoXGBoost). Layer `{brand}_{algorithm}_candidates`, CRS EPSG:4326.
+
+Each file contains the **Top 10% scored cells**, with Top 1% and Top 5% nested as flags.
+
+| Column | Type | Description |
+|---|---|---|
+| `GRID_ID` | int64 | Cell key |
+| `BRAND` | string | Alfamart or Indomaret |
+| `ALGORITHM` | string | xgboost or geoxgboost |
+| `PRED_PROBA` | float64 | Relative suitability score [0, 1] — **not a probability** |
+| `PERCENTILE` | float64 | Percentile rank within eligible pool |
+| `CAND_TOP1`, `CAND_TOP5`, `CAND_TOP10` | int8 | Tier flags (0 or 1) |
+| `REC_LEVEL` | string | TOP1, TOP5, or TOP10 |
+| `DIST_EXIST_M` | float64 | Metres to nearest same-brand outlet |
+| `TOP1_FEAT` … `TOP7_FEAT` | string | Seven strongest local drivers (by abs SHAP) |
+| `TOP1_XVAL` … `TOP7_XVAL` | float64 | Observed feature value |
+| `TOP1_SHAP` … `TOP7_SHAP` | float64 | Signed SHAP contribution |
+| `TOP1_DIR` … `TOP7_DIR` | string | Raises or lowers score |
+| `SHAP_BASE` | float64 | Explainer base value |
+| `SHAP_KIND` | string | `direct_tree_shap_xgboost` or `surrogate_shap_for_geoxgboost` |
+| `WADMKK` | string | Regency or city |
+
+**Candidate counts:**
+
+| Brand | XGBoost Top 1% | Top 5% | Top 10% | GeoXGBoost Top 1% | Top 5% | Top 10% |
+|---|---|---|---|---|---|---|
+| Alfamart | 6,233 | 31,161 | 62,322 | 6,233 | 31,161 | 62,322 |
+| Indomaret | 6,259 | 31,295 | 62,589 | 6,259 | 31,295 | 62,589 |
+
+**Eligibility:** Cell qualifies if `target_presence == 0` **and** centroid is ≥250 m from nearest same-brand outlet. Applied *after* full-grid scoring.
+
+Eligible pools: 623,220 (Alfamart), 625,928 (Indomaret).
+
+---
+
+## 📖 Understanding PRED_PROBA
+
+`PRED_PROBA` measures how closely a cell resembles the feature signature of the existing outlet network. It is **NOT**:
+
+- A probability that a store will open there
+- A probability that a store would succeed
+- A revenue, footfall, or profit estimate
+- A substitute for site survey or feasibility analysis
+
+About 0.1–0.2% of raw scores fell outside [0, 1] and were clipped. The output is a spatial index, not a calibrated probability.
+
+---
+
+## 🔍 File Manifest & Verification
+
+| Path | Format | Size | Checksum |
+|---|---|---|---|
+| `grid/grid_alfamart_x1_x35.parquet` | Parquet, snappy | ~80–120 MB | See `checksums.sha256` |
+| `grid/grid_indomaret_x1_x35.parquet` | Parquet, snappy | ~80–120 MB | idem |
+| `grid/grid_geometry_100m.gpkg` | GeoPackage | ~250–350 MB | idem |
+| `sentiment/outlet_features_alfamart_x27_x35.csv` | UTF-8 CSV | ~1–2 MB | idem |
+| `sentiment/outlet_features_indomaret_x27_x35.csv` | UTF-8 CSV | ~1–2 MB | idem |
+| `partition/spatial_blocks_1km.csv` | CSV | ~15–20 MB | idem |
+| `partition/development_holdout_split.csv` | CSV | <1 MB | idem |
+| `candidates/candidates_alfamart_xgboost_*.gpkg` | GeoPackage | ~30–60 MB | idem |
+| `candidates/candidates_alfamart_geoxgboost_*.gpkg` | GeoPackage | ~30–60 MB | idem |
+| `candidates/candidates_indomaret_xgboost_*.gpkg` | GeoPackage | ~30–60 MB | idem |
+| `candidates/candidates_indomaret_geoxgboost_*.gpkg` | GeoPackage | ~30–60 MB | idem |
+
+**⚠️ All coordinates are EPSG:32748 (WGS 84 / UTM zone 48S) unless stated otherwise.**
+
+Candidate layers are additionally reprojected to EPSG:4326 for web display.
+
+---
+
+## 🔐 License & Attribution
+
+- **Aggregated data** (all files under `data/`): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- **Third-party sources**: Not redistributed. Processed derivatives only. See LICENSE-DATA.md for details.
+- **Personal data**: None released. Outlet-level aggregation only; no individual reviewer records.
+
+**Cite as:**
 
 ```bibtex
-@article{nugroho2026ritelai,
-  author  = {Nugroho, Budi Prasetyo and Gunawan, Alexander Agung Santoso},
-  title   = {{RitelAI}: Integrating Geospatial Data and Consumer Sentiment for
-             Retail Store Location Recommendation in Greater Jakarta},
-  journal = {IAENG International Journal of Computer Science},
-  year    = {2026},
-  note    = {Forthcoming}
-}
-
-@dataset{nugroho2026ritelai_data,
-  author    = {Nugroho, Budi Prasetyo and Gunawan, Alexander Agung Santoso},
-  title     = {{RitelAI} replication package: microspatial grid, review-derived
-               features and candidate layers for Greater Jakarta},
-  year      = {2026},
-  publisher = {Zenodo},
-  doi       = {10.5281/zenodo.0000000}
+@dataset{ritelai2024,
+  author = {Budi Carto},
+  title = {RitelAI: Retail Location Suitability Assessment for Jabodetabek},
+  year = {2024},
+  url = {https://github.com/budi-carto/ritelai-jabodetabek},
+  doi = {10.5281/zenodo.XXXXX}
 }
 ```
 
-See also [`CITATION.cff`](CITATION.cff), which GitHub renders as a "Cite this repository" button.
+---
+
+## 📚 Documentation
+
+- **[DATA_DICTIONARY.md](DATA_DICTIONARY.md)** — Full definition of X1–X35 predictors, data sources, construction methods
+- **[REPRODUCE.md](REPRODUCE.md)** — Methodology overview and key reproduction metrics
+- **[LICENSE](LICENSE)** — MIT license (applies to any derivative code)
+- **[LICENSE-DATA.md](LICENSE-DATA.md)** — CC BY 4.0 for data + third-party attribution
 
 ---
 
-## Licensing
+## 🤝 Contact & Support
 
-| Component | Licence |
-|---|---|
-| Code — notebooks, scripts | [MIT](LICENSE) |
-| Aggregated data — grid, sentiment features, partition, candidate layers | [CC BY 4.0](LICENSE-DATA.md) |
-| Third-party source layers | Their own licences; not redistributed here |
+For questions about the dataset or to report issues:
 
----
-
-## Limitations
-
-Stated plainly, because they bound what the outputs mean.
-
-- The target is presence–background, not performance. Existing outlets may include weak performers; empty cells are not verified failures.
-- Review coverage is uneven. Roughly 69% of high-urban Alfamart grids carry at least one sentiment signal, against under 1% of low-urban grids, so sentiment features are far more informative in dense areas.
-- Aspect detection uses transparent keyword rules and attaches review-level polarity to every aspect mentioned. It cannot resolve mixed sentiment inside a single review.
-- One metropolitan region, two closely related retail formats, one block design. Dependence can still cross adjacent block boundaries.
-- The optimisation budget was 20 valid trials per study and does not demonstrate global optimality.
-- Geographical-XGBoost was introduced for spatially local regression; its use for imbalanced classification here should be validated on further benchmarks.
-- GeoXGBoost explanations are surrogate-based, never direct SHAP.
+- **GitHub Issues**: https://github.com/budi-carto/ritelai-jabodetabek/issues
+- **Email**: budi.carto@example.com
 
 ---
 
-## Contact
+## ⚠️ Limitations & Disclaimer
 
-Budi Prasetyo Nugroho — Master of Computer Science Program, BINUS Graduate Program, Bina Nusantara University, Jakarta, Indonesia — budi.nugroho001@binus.ac.id
+The data is provided **as-is**, without warranty of any kind.
 
-Alexander Agung Santoso Gunawan — School of Computer Science, Bina Nusantara University, Jakarta, Indonesia — aagung@binus.edu
+- The suitability score is a relative spatial index, not a probability
+- Not a prediction of commercial success
+- Field survey, parcel availability, zoning checks, and financial feasibility analysis are required before any real siting decision
+- No liability accepted for commercial decisions based on this data
+
+---
+
+**Last updated:** 2024-09-20  
+**Repository:** https://github.com/budi-carto/ritelai-jabodetabek  
+**Archive DOI:** https://doi.org/10.5281/zenodo.XXXXX

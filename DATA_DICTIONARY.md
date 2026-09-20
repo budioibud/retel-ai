@@ -1,187 +1,179 @@
 # Data Dictionary — Predictors X1–X35
 
-Every predictor is stored as a `float64` column named `x1` … `x35` in
-`data/grid/grid_{brand}_x1_x35.parquet`, one value per 100 × 100 m cell.
-
-All distance and density operations were performed in **EPSG:32748**
-(WGS 84 / UTM zone 48S), so distances are in metres and densities in metric units.
-
-Conventions used in the "Construction" column:
-
-- **Raster → grid**: zonal mean of raster pixels falling inside the cell.
-- **Polygon → grid**: rasterised, then dominant class or binary indicator.
-- **Line → grid**: total length inside the cell divided by cell area.
-- **Point → distance**: Euclidean distance from the cell centroid to the nearest feature.
-- **Point → KDE**: kernel density estimate rasterised and rescaled to a 0–1 index.
+Complete definition of all 35 spatial predictors in the RitelAI dataset. All operations performed in **EPSG:32748** (WGS 84 / UTM zone 48S).
 
 ---
 
-## X1–X2 · Physical and land conditions
+## X1–X2 · Physical and Land Conditions
 
-| Code | Name | Source | Construction | Scope |
+| Code | Name | Source | Construction | Notes |
 |---|---|---|---|---|
-| X1 | Elevation | DEMNAS (BIG) | Raster → grid, mean elevation in metres | Shared |
-| X2 | Land-use type | Land use / RBI 1:10,000 (BIG) | Polygon → grid, dominant class coded built-up vs non-built-up | Shared |
+| X1 | Elevation | DEMNAS (BIG) | Raster → grid zonal mean, metres | High-elevation ≠ steep; verify slope from DEM for site decisions |
+| X2 | Land-use type | Land use / RBI 1:10,000 (BIG) | Polygon → rasterised, dominant class (built-up vs non) | Binary: 0 = non-built, 1 = built-up |
 
-> X1 is elevation, not slope. A high-elevation cell can still be flat. Slope is not
-> a feature in this study, so no claim about terrain steepness can be made from X1
-> alone. Verify slope from a DEM before finalising any site.
+---
 
-## X3–X6 · Accessibility and transport
+## X3–X6 · Accessibility and Transport
 
-| Code | Name | Source | Construction | Scope |
+| Code | Name | Source | Construction | Notes |
 |---|---|---|---|---|
-| X3 | Road-network density | OpenStreetMap, road lines | Line → grid, km per km² | Shared |
-| X4 | Distance to nearest main road | OpenStreetMap, primary/secondary roads | Point/line → distance, metres | Shared |
-| X5 | Distance to nearest station entrance | OpenStreetMap / POI, station entrances | Point → distance, metres | Shared |
-| X6 | Distance to nearest bus stop | OpenStreetMap / POI, bus stops | Point → distance, metres | Shared |
+| X3 | Road-network density | OpenStreetMap | Line → grid, km per km² | Higher = better connectivity |
+| X4 | Distance to main road | OSM primary/secondary roads | Euclidean distance from centroid, metres | Closer = better access |
+| X5 | Distance to station | OSM/POI station entrances | Euclidean distance, metres | Transit access proxy |
+| X6 | Distance to bus stop | OSM/POI bus stops | Euclidean distance, metres | Transit access proxy |
 
-## X7–X9 · Economic activity and demography
+---
 
-| Code | Name | Source | Construction | Scope |
+## X7–X9 · Economic Activity and Demography
+
+| Code | Name | Source | Construction | Notes |
 |---|---|---|---|---|
-| X7 | Nighttime light intensity | VIIRS Nighttime Lights | Raster → grid, mean radiance | Shared |
-| X8 | Population density | WorldPop population raster | Raster → grid, persons per cell | Shared |
-| X9 | Land-value / rent proxy | ATR/BPN Zona Nilai Tanah (WMS) | WMS RGB → raster class, used as a rent proxy | Shared |
+| X7 | Nighttime light intensity | VIIRS Nighttime Lights (NOAA/EOG) | Raster → zonal mean radiance | Economic activity proxy |
+| X8 | Population density | WorldPop raster | Raster → zonal sum, persons per cell | Demand proxy |
+| X9 | Land-value proxy | ATR/BPN Zona Nilai Tanah (WMS) | WMS RGB → class (1–5) | Rent/commercial value proxy |
 
-> X7 is used as an activity proxy, consistent with established use of nighttime light
-> in urban–rural characterisation. X9 is a zonal land-value class, not a market rent quote.
+---
 
-## X10–X12 · Market demand
+## X10–X12 · Market Demand
 
-| Code | Name | Source | Construction | Scope |
+| Code | Name | Source | Construction | Notes |
 |---|---|---|---|---|
-| X10 | Distance to nearest mall | Google Maps POI | Point → distance, metres | Shared |
-| X11 | Distance to nearest office building | Google Maps POI | Point → distance, metres | Shared |
-| X12 | Distance to nearest university | Google Maps POI | Point → distance, metres | Shared |
+| X10 | Distance to mall | Google Maps POI | Euclidean distance, metres | Shopping centre proximity |
+| X11 | Distance to office | Google Maps POI | Euclidean distance, metres | Office worker concentration |
+| X12 | Distance to university | Google Maps POI | Euclidean distance, metres | Student population proxy |
 
-## X13–X23 · Functional zoning and points of interest
+---
 
-All eleven are kernel density indices rescaled to 0–1.
+## X13–X23 · Functional Zoning and Points of Interest
 
-| Code | Name | Source | Construction | Scope |
+All are kernel density estimates rescaled to [0, 1].
+
+| Code | Name | Source | Construction | Notes |
 |---|---|---|---|---|
-| X13 | Transport facilities | OpenStreetMap / POI | Point → KDE, 0–1 | Shared |
-| X14 | Food services | Google Maps POI | Point → KDE, 0–1 | Shared |
-| X15 | Residential areas | Land use (BIG) | Polygon → binary indicator | Shared |
-| X16 | Culture, science and education | Google Maps POI | Point → KDE, 0–1 | Shared |
-| X17 | Shopping services | Google Maps POI | Point → KDE, 0–1 | Shared |
-| X18 | Life services | OpenStreetMap POI | Point → KDE, 0–1 | Shared |
-| X19 | Medical facilities | Google Maps POI | Point → KDE, 0–1 | Shared |
-| X20 | Tourism sites | Google Maps POI | Point → KDE, 0–1 | Shared |
-| X21 | Sport and recreation | Google Maps POI | Point → KDE, 0–1 | Shared |
-| X22 | Government institutions | GeoServer / WFS | Point → KDE, 0–1 | Shared |
-| X23 | Corporate business | Google Maps POI | Point → KDE, 0–1 | Shared |
+| X13 | Transport facilities | OSM POI | KDE, 0–1 | Stations, terminals, hubs |
+| X14 | Food services | Google Maps | KDE, 0–1 | Restaurants, cafes |
+| X15 | Residential areas | Land use (BIG) | Binary: 1 if residential | Foot traffic source |
+| X16 | Culture, science, education | Google Maps | KDE, 0–1 | Museums, libraries, schools |
+| X17 | Shopping services | Google Maps | KDE, 0–1 | Retail, boutiques |
+| X18 | Life services | OSM POI | KDE, 0–1 | Hair salons, laundry, etc. |
+| X19 | Medical facilities | Google Maps | KDE, 0–1 | Clinics, hospitals |
+| X20 | Tourism sites | Google Maps | KDE, 0–1 | Attractions, hotels |
+| X21 | Sport and recreation | Google Maps | KDE, 0–1 | Gyms, parks |
+| X22 | Government institutions | GeoServer WFS | KDE, 0–1 | Offices, agencies |
+| X23 | Corporate business | Google Maps | KDE, 0–1 | Office parks, business centres |
+
+---
 
 ## X24–X25 · Competition
 
-| Code | Name | Source | Construction | Scope |
+| Code | Name | Source | Construction | Notes |
 |---|---|---|---|---|
-| X24 | Distance to nearest competitor | Competitor outlet POI | Point → distance, metres | **Brand-specific** |
-| X25 | Competitor density | Competitor outlet POI | Point → KDE, 0–1 | **Brand-specific** |
+| X24 | Distance to competitor | Competitor outlet POI | Euclidean distance, metres | **Brand-specific**: Indomaret for Alfamart model, vice versa |
+| X25 | Competitor density | Competitor outlet POI | KDE, 0–1 | **Brand-specific**, same definition |
 
-> "Competitor" means the rival chain: for the Alfamart dataset the competitors are
-> Indomaret outlets, and vice versa. X24–X25 are computed once from competitor outlets,
-> not from the modelled brand, so they carry no target leakage and need no fold-wise rebuild.
+> For Alfamart model: competitors = Indomaret outlets (and vice versa). No target leakage; computed once from competitor network, not from modelled brand.
 
-## X26 · Same-brand network context
+---
 
-| Code | Name | Source | Construction | Scope |
-|---|---|---|---|---|
-| X26 | Count of same-brand outlets within 500 m | Brand outlet master | Point count inside a 500 m radius of the cell centroid | **Brand-specific, fold-dependent** |
+## X26 · Same-Brand Network Context
 
-> X26 is deliberately **not** called retail agglomeration. X24–X25 already carry
-> competitor structure, and a high X26 can mean concentrated demand, established
-> network coverage, saturation, or cannibalisation at the same time. Its sign is
-> context-dependent and it did not improve Average Precision consistently.
->
-> **Leakage note.** X26 is derived from the outlets that define the target, so it is
-> rebuilt inside every fold using training-region outlets only, with leave-one-grid-out
-> applied to positive training cells.
+| Code | Name | Construction | Notes |
+|---|---|---|---|
+| X26 | Same-brand outlets within 500 m | Point count inside radius | **Brand-specific, fold-dependent**: Rebuilt inside every fold using training-region outlets only. Leave-one-grid-out applied to positive training cells. High value may indicate concentration, saturation, or cannibalisation. Sign is context-dependent. |
 
-## X27–X35 · Consumer rating and sentiment
+**Leakage handling:** X26 derived from target outlets, so must be rebuilt inside cross-validation using training blocks only. Validation outlets never contribute to training-grid features.
 
-Derived from deduplicated public Google Maps reviews, aggregated per outlet, then
-propagated to every grid cell within 500 m and averaged where influence areas overlap.
+---
+
+## X27–X35 · Consumer Rating and Sentiment
+
+Derived from deduplicated public Google Maps reviews, aggregated per outlet, then **propagated to every grid cell within 500 m** and averaged where influence areas overlap.
 
 | Code | Name | Construction | Scope |
 |---|---|---|---|
-| X27 | Mean stock sentiment | Mean review polarity among reviews mentioning stock | **Brand-specific, fold-dependent** |
-| X28 | Mean queue / cashier sentiment | Mean polarity among reviews mentioning queues or cashiers | idem |
-| X29 | Mean price sentiment | Mean polarity among reviews mentioning price | idem |
-| X30 | Mean service sentiment | Mean polarity among reviews mentioning service | idem |
-| X31 | Mean rating, last 12 months | Mean star rating over the most recent 12 months, falling back to all valid ratings when none is recent | idem |
-| X32 | Stock sentiment change | Mean of newer chronological half minus older half, stock reviews | idem |
-| X33 | Queue sentiment change | idem, queue reviews | idem |
-| X34 | Price sentiment change | idem, price reviews | idem |
-| X35 | Service sentiment change | idem, service reviews | idem |
+| X27 | Mean stock sentiment | Mean review polarity [−1, 1] for reviews mentioning stock | Brand-specific, fold-dependent |
+| X28 | Mean queue/cashier sentiment | Mean polarity for queue/cashier reviews | Brand-specific, fold-dependent |
+| X29 | Mean price sentiment | Mean polarity for price reviews | Brand-specific, fold-dependent |
+| X30 | Mean service sentiment | Mean polarity for service reviews | Brand-specific, fold-dependent |
+| X31 | Mean rating, last 12 months | Mean star rating (most recent 12m, fallback all valid) | Brand-specific, fold-dependent |
+| X32 | Stock sentiment change | Newer half mean − older half mean, stock reviews | Brand-specific, fold-dependent |
+| X33 | Queue sentiment change | Newer half − older half, queue reviews | Brand-specific, fold-dependent |
+| X34 | Price sentiment change | Newer half − older half, price reviews | Brand-specific, fold-dependent |
+| X35 | Service sentiment change | Newer half − older half, service reviews | Brand-specific, fold-dependent |
 
-**Polarity coding.** The selected brand-specific transformer maps each review to
-−1 (negative), 0 (neutral) or +1 (positive). Aspect mentions are detected with
-transparent keyword dictionaries; a review mentioning several aspects contributes its
-review-level polarity to each of them, which means mixed sentiment inside one review
-cannot be resolved.
+**Polarity coding:** Transformer model (IndoBERT or IndoRoBERTa, fine-tuned on brand-specific reviews) maps each review to −1 (negative), 0 (neutral), or +1 (positive). Aspect mentions detected via keyword dictionaries; a review mentioning multiple aspects contributes its review polarity to each.
 
-**Zero is ambiguous.** In X27–X30 and X32–X35, a zero may mean neutral sentiment,
-no review mentioning that aspect, or too few dated reviews to compute a change. These
-three cases are not distinguished in the released features. Do not read zero as
-observed neutrality.
+**Zero is ambiguous** in X27–X30 and X32–X35:
+- May mean neutral sentiment observed
+- May mean no review mentioning that aspect
+- May mean too few dated reviews to compute change
 
-**Coverage is uneven.** Grids carrying at least one sentiment signal:
+Distinguish using `n_reviews` and `n_reviews_recent_12m` columns in outlet-level CSV files (not in gridded features).
 
-| Urban class | Alfamart | Indomaret |
+**Coverage by urban class:**
+
+| Urban character | Alfamart (% grids with signal) | Indomaret (% grids with signal) |
 |---|---|---|
-| High urban character | 69.43% | 58.13% |
-| Transition zone | 16.96% | 12.46% |
-| Low urban character | 0.71% | 0.44% |
+| High urban | 69.43% | 58.13% |
+| Transition | 16.96% | 12.46% |
+| Low urban | 0.71% | 0.44% |
 
-Over 99% of low-urban grids receive no sentiment signal from nearby outlets, so in those
-areas the models rely almost entirely on the spatial predictors.
-
----
-
-## Feature groups used in the explainability analysis
-
-| Group | Features |
-|---|---|
-| Physical / land conditions | X1–X2 |
-| Accessibility / transport | X3–X6 |
-| Economic activity / demography | X7–X9 |
-| Market demand | X10–X12 |
-| Functional zoning / POI | X13–X23 |
-| Competition | X24–X25 |
-| Same-brand network | X26 |
-| Sentiment / rating | X27–X35 |
+Over 99% of low-urban grids receive no sentiment signal from nearby outlets; models rely on spatial predictors there.
 
 ---
 
-## Static versus dynamic features
+## Feature Group Summary
 
-| Class | Features | Handling |
-|---|---|---|
-| **Static** | X1–X25 | Computed once over the whole grid. Missing values imputed with training-fold medians. |
-| **Dynamic** | X26–X35 | Rebuilt inside every training/validation split from training-region outlets only, with leave-one-grid-out on positive training cells. |
+| Group | Features | Type | Handling |
+|---|---|---|---|
+| Physical / land | X1–X2 | Static | Computed once; missing → training-fold median |
+| Accessibility / transport | X3–X6 | Static | idem |
+| Economic / demographic | X7–X9 | Static | idem |
+| Market demand | X10–X12 | Static | idem |
+| Functional zoning / POI | X13–X23 | Static | idem |
+| Competition | X24–X25 | Static | Computed once; no fold-wise rebuild (no target leakage) |
+| Same-brand network | X26 | **Dynamic** | **Rebuilt inside every fold** from training outlets only |
+| Sentiment / rating | X27–X35 | **Dynamic** | **Rebuilt inside every fold** from training outlets only |
 
-This split is the core of the leakage-aware design. Computing X26–X35 once, before
-splitting, would let a validation outlet reveal itself through its own count and its own
-reviews.
+**Static (X1–X25)** computed once over the whole grid. Missing values imputed with training-fold medians during feature construction.
+
+**Dynamic (X26–X35)** rebuilt for each training/validation split to prevent leakage. Validation outlets never feed training-grid features.
 
 ---
 
-## Source acquisition notes
+## Coordinate Systems
 
-To rebuild the grid from scratch rather than using the released processed values:
+All distances and density operations in **EPSG:32748** (WGS 84 / UTM zone 48S):
+- Distances in metres
+- Densities in metric units (per km² or per cell)
+
+Candidate layers reprojected to **EPSG:4326** for web display and GeoPackage files.
+
+---
+
+## Source Access
+
+To rebuild from original sources (not using released processed values):
 
 | Source | Access | Notes |
 |---|---|---|
 | DEMNAS | https://tanahair.indonesia.go.id | National DEM, requires registration |
-| RBI / land use 1:10,000 | BIG | Agency request |
-| OpenStreetMap | Geofabrik Indonesia extract | ODbL; record the extract date |
-| VIIRS Nighttime Lights | NOAA / Earth Observation Group | Annual composite |
-| WorldPop | https://www.worldpop.org | Indonesia population raster |
-| ZNT land value | ATR/BPN WMS | Served as RGB tiles; class recovered by colour mapping |
-| Google Maps POI and reviews | Places API and browser automation | Subject to platform terms; only aggregates are redistributed |
-| Administrative boundaries | BIG / GeoServer WFS | Province, regency/city, district, village |
+| RBI / land use 1:10,000 | BIG (Badan Informasi Geospasial) | Agency request |
+| OpenStreetMap | Geofabrik Indonesia | Record extract date (ODbL 1.0) |
+| VIIRS Nighttime Lights | NOAA / Earth Observation Group | Annual composite, public domain |
+| WorldPop | https://www.worldpop.org | CC BY 4.0; Indonesia population raster |
+| Zona Nilai Tanah (ZNT) | ATR/BPN WMS | Served as RGB tiles; class via colour mapping |
+| Google Maps POI & reviews | Places API + browser automation | Subject to Google Maps Platform ToS; only aggregates released |
+| Administrative boundaries | BIG / GeoServer WFS | Province, regency, district, village |
 
-Record the acquisition date for every layer. POI and review data drift continuously, so a
-rebuild performed later will not reproduce the released grid byte for byte.
+**Important:** POI and review data drift continuously. A rebuild months or years later will not match byte-for-byte.
+
+---
+
+## How the predictors feed the models
+
+1. **X1–X25 (static):** Used as-is in every fold
+2. **X26 (same-brand count):** Rebuilt per fold using training-region outlets only; leave-one-grid-out for positive training cells
+3. **X27–X35 (sentiment):** Rebuilt per fold using training-region outlets and their reviews only; aggregation includes leave-one-grid-out
+
+This fold-aware design ensures validation metrics reflect generalization to unseen locations and time periods, not internal memorisation.
